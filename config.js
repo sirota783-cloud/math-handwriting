@@ -1,1 +1,1 @@
-window.HANDWRITING_CONFIG={SUPABASE_URL:"PASTE_YOUR_SUPABASE_URL_HERE",SUPABASE_ANON_KEY:"PASTE_YOUR_SUPABASE_ANON_KEY_HERE",TABLE_NAME:"handwriting_submissions",PROJECT_VERSION:"unlimited-v1"};
+window.HANDWRITING_CONFIG={SUPABASE_URL:"https://bthkzkdsijnhuvnewzuj.supabase.co",SUPABASE_ANON_KEY:"sb_publishable_gsoH21Rei_f5rQyrjXyXPQ_8oI8LKR0",TABLE_NAME:"handwriting_submissions",PROJECT_VERSION:"unlimited-v1"};
