@@ -3,6 +3,9 @@
 
   const CHUNK_SIZE = 50;
 
+  const personalProfile =
+    window.HANDWRITING_PROFILE || null;
+
   const groups = [
     {
       c: "hebrew",
@@ -55,6 +58,29 @@
       s: ["(",")","[","]","{","}","|",",",".",":",";"]
     }
   ];
+
+  function selectedProfileSet() {
+    if (!personalProfile?.categorySelectorId) {
+      return null;
+    }
+
+    return document.getElementById(
+      personalProfile.categorySelectorId
+    )?.value || null;
+  }
+
+  function activeGroups() {
+    const selectedSet = selectedProfileSet();
+    const categories = selectedSet
+      ? personalProfile?.categorySets?.[selectedSet]
+      : personalProfile?.categories;
+
+    return categories?.length
+      ? groups.filter(group =>
+          categories.includes(group.c)
+        )
+      : groups;
+  }
 
   const tr = {
     ru: {
@@ -222,7 +248,10 @@
   const ctx = ui.canvas.getContext("2d");
 
   function T() {
-    return tr[lang];
+    return {
+      ...tr[lang],
+      ...(personalProfile?.translations?.[lang] || {})
+    };
   }
 
   function show(x) {
@@ -316,7 +345,7 @@
   function queue() {
     const b = {};
 
-    for (const g of groups) {
+    for (const g of activeGroups()) {
       b[g.c] = shuffle(
         g.s.map(symbol => ({
           symbol,
@@ -357,7 +386,9 @@
   function start() {
     session = {
       submissionId: id(),
-      participantCode: code(),
+      participantCode: personalProfile
+        ? `${personalProfile.participantPrefix || "PERSONAL"}-${code().slice(2)}`
+        : code(),
       startedAt: new Date().toISOString(),
       reps: +ui.reps.value,
       r: 0,
@@ -366,7 +397,10 @@
       round: 1,
       samples: [],
       skipped: [],
-      language: lang
+      language: lang,
+      profileId: personalProfile?.id || null,
+      datasetScope: personalProfile ? "personal" : "general",
+      profileSet: selectedProfileSet()
     };
 
     strokes = [];
@@ -575,6 +609,9 @@
       startedAt: session.startedAt,
       completedAt: new Date().toISOString(),
       language: session.language,
+      profileId: session.profileId,
+      datasetScope: session.datasetScope,
+      profileSet: session.profileSet,
       repetitionsPerSymbol: session.reps,
       sampleCount: session.samples.length,
       skipped: session.skipped,
@@ -689,6 +726,15 @@
 
           language:
             session.language,
+
+          profileId:
+            session.profileId,
+
+          datasetScope:
+            session.datasetScope,
+
+          profileSet:
+            session.profileSet,
 
           repetitionsPerSymbol:
             session.reps,

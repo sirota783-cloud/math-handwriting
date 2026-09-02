@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Персональный сбор почерка Леонида</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <h1>Personal Handwriting Collection — Leonid</h1>
+  <select id="lang">
+    <option value="ru">Русский</option>
+    <option value="he">עברית</option>
+    <option value="en">English</option>
+  </select>
+</header>
+<main>
+<section id="welcome" class="card">
+  <h2 id="wTitle">Сбор моего почерка</h2>
+  <p id="wText">Напишите каждую букву 10 раз.</p>
+  <ul>
+    <li id="anon">Образцы сохраняются отдельно в персональном профиле Leonid.</li>
+    <li id="device">Лучше писать стилусом.</li>
+    <li id="voluntary">Можно закончить и отправить данные в любой момент.</li>
+  </ul>
+  <label class="consent">
+    <input id="consent" type="checkbox">
+    <span id="consentText">Я подтверждаю использование этих образцов для моей персональной модели.</span>
+  </label>
+  <label class="setting">
+    <span>Что собирать / מה לאסוף</span>
+    <select id="personalSet">
+      <option value="hebrew" selected>Буквы иврита / אותיות בעברית</option>
+      <option value="math">Математические символы / סמלים מתמטיים</option>
+      <option value="all">Всё / הכול</option>
+    </select>
+  </label>
+  <label class="setting">
+    <span id="repLabel">Повторений каждой буквы</span>
+    <select id="reps">
+      <option>5</option>
+      <option selected>10</option>
+      <option>15</option>
+      <option>20</option>
+    </select>
+  </label>
+  <button id="start" class="primary" disabled>Начать</button>
+  <p id="cloudHint" class="muted"></p>
+</section>
+
+<section id="work" class="hidden">
+  <div class="topcard"><span id="code"></span><span id="count"></span><span id="time"></span></div>
+  <div class="card write">
+    <div id="instruction">Напишите букву</div>
+    <div id="target">א</div>
+    <div id="repeat"></div>
+    <div class="canvasBox"><canvas id="canvas"></canvas><div id="empty" class="overlay hidden">Сначала напишите букву</div></div>
+    <div class="buttons">
+      <button id="undo">Отменить штрих</button>
+      <button id="clear">Очистить</button>
+      <button id="skip">Пропустить</button>
+      <button id="save" class="primary">Сохранить и дальше</button>
+    </div>
+    <button id="finish" class="finish">Завершить и отправить</button>
+    <p id="inputType" class="muted"></p>
+  </div>
+</section>
+
+<section id="review" class="card hidden">
+  <h2 id="reviewTitle">Образцы готовы</h2>
+  <p id="summary"></p>
+  <button id="continue">Продолжить писать</button>
+  <button id="submit" class="primary">Отправить данные</button>
+  <p id="status"></p>
+</section>
+
+<section id="thanks" class="card hidden thanks">
+  <div class="ok">✓</div>
+  <h2 id="thanksTitle">Готово!</h2>
+  <p id="thanksText">Персональные образцы успешно отправлены.</p>
+  <p id="receipt"></p>
+</section>
+</main>
+
+<script>
+window.HANDWRITING_PROFILE = {
+  id: "leonid-personal-v1",
+  participantPrefix: "LEONID",
+  categorySelectorId: "personalSet",
+  categorySets: {
+    hebrew: ["hebrew"],
+    math: [
+      "latinUpper", "latinLower", "digits",
+      "greekLower", "greekUpper", "arithmetic",
+      "analysis", "logic", "geometry", "punctuation"
+    ],
+    all: [
+      "hebrew", "latinUpper", "latinLower", "digits",
+      "greekLower", "greekUpper", "arithmetic",
+      "analysis", "logic", "geometry", "punctuation"
+    ]
+  },
+  translations: {
+    ru: {
+      wTitle: "Сбор почерка Леонида",
+      wText: "Выберите набор и напишите каждую букву или символ 10 раз. Образцы сохраняются отдельно от работ учащихся.",
+      anon: "Эти образцы относятся только к персональному профилю Leonid.",
+      device: "Пишите обычным почерком с помощью стилуса.",
+      voluntary: "Можно закончить и отправить данные в любой момент.",
+      consentText: "Я подтверждаю использование этих образцов для обучения моей персональной модели.",
+      repLabel: "Повторений каждой буквы или символа",
+      instruction: "Напишите букву или символ"
+    },
+    he: {
+      wTitle: "איסוף כתב היד של לאוניד",
+      wText: "בחר קבוצה וכתוב כל אות או סמל 10 פעמים. הדוגמאות נשמרות בנפרד מדוגמאות התלמידים.",
+      anon: "הדוגמאות שייכות רק לפרופיל האישי Leonid.",
+      device: "כתוב בכתב היד הרגיל שלך באמצעות עט דיגיטלי.",
+      voluntary: "אפשר לסיים ולשלוח את הנתונים בכל עת.",
+      consentText: "אני מאשר להשתמש בדוגמאות לאימון המודל האישי שלי.",
+      repLabel: "מספר חזרות לכל אות או סמל",
+      instruction: "כתוב את האות או הסמל"
+    },
+    en: {
+      wTitle: "Leonid handwriting collection",
+      wText: "Choose a set and write each letter or symbol 10 times. These samples are stored separately from student submissions.",
+      anon: "These samples belong only to the Leonid personal profile.",
+      device: "Write naturally with the stylus.",
+      voluntary: "You may finish and submit at any time.",
+      consentText: "I confirm that these samples may be used to train my personal model.",
+      repLabel: "Repetitions per letter or symbol",
+      instruction: "Write the letter or symbol"
+    }
+  }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
