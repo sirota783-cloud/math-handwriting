@@ -422,11 +422,19 @@
               symbol
             );
 
+            const baselineDone =
+              Number(
+                personalProfile?.baselineCompleted?.[g.c] || 0
+              );
+
             return {
               symbol,
               category: g.c,
               done: personalProfile
-                ? Number(progress[key] || 0)
+                ? Math.max(
+                    Number(progress[key] || 0),
+                    baselineDone
+                  )
                 : 0
             };
           })
