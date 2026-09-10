@@ -31,7 +31,8 @@
   <label class="setting">
     <span>Что собирать / מה לאסוף</span>
     <select id="personalSet">
-      <option value="hebrew" selected>Буквы иврита / אותיות בעברית</option>
+      <option value="hebrew">Буквы иврита / אותיות בעברית</option>
+      <option value="digits" selected>Цифры 0–9 / ספרות 0–9</option>
       <option value="math">Математические символы / סמלים מתמטיים</option>
       <option value="all">Всё / הכול</option>
     </select>
@@ -93,6 +94,7 @@ window.HANDWRITING_PROFILE = {
   categorySelectorId: "personalSet",
   categorySets: {
     hebrew: ["hebrew"],
+    digits: ["digits"],
     math: [
       "latinUpper", "latinLower", "digits",
       "greekLower", "greekUpper", "arithmetic",
