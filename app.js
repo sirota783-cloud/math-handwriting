@@ -245,6 +245,70 @@
   let inputType = "unknown";
   let timer = null;
 
+  const progressStorageKey = personalProfile?.id
+    ? `handwriting-progress:${personalProfile.id}`
+    : null;
+
+  function progressItemKey(category, symbol) {
+    return `${category}\u001f${symbol}`;
+  }
+
+  function loadSubmittedProgress() {
+    if (!progressStorageKey) return {};
+
+    try {
+      const raw = localStorage.getItem(progressStorageKey);
+      const data = raw ? JSON.parse(raw) : {};
+
+      return data && typeof data === "object"
+        ? data
+        : {};
+    }
+    catch (e) {
+      console.warn(
+        "Could not read handwriting progress",
+        e
+      );
+
+      return {};
+    }
+  }
+
+  function commitSubmittedSamples(samples) {
+    if (!progressStorageKey || !samples?.length) {
+      return;
+    }
+
+    const progress = loadSubmittedProgress();
+
+    for (const sample of samples) {
+      const key = progressItemKey(
+        sample.category,
+        sample.label
+      );
+
+      progress[key] =
+        Number(progress[key] || 0) + 1;
+    }
+
+    localStorage.setItem(
+      progressStorageKey,
+      JSON.stringify(progress)
+    );
+  }
+
+  function allDoneMessage() {
+    if (lang === "he") {
+      return "כל האותיות או הסמלים שנבחרו כבר נאספו.";
+    }
+
+    if (lang === "ru") {
+      return "Все выбранные буквы или символы уже собраны.";
+    }
+
+    return "All selected letters or symbols have already been collected.";
+  }
+
   const ctx = ui.canvas.getContext("2d");
 
   function T() {
@@ -344,13 +408,32 @@
 
   function queue() {
     const b = {};
+    const targetReps = +ui.reps.value;
+    const progress = personalProfile
+      ? loadSubmittedProgress()
+      : {};
 
     for (const g of activeGroups()) {
       b[g.c] = shuffle(
-        g.s.map(symbol => ({
-          symbol,
-          category: g.c
-        }))
+        g.s
+          .map(symbol => {
+            const key = progressItemKey(
+              g.c,
+              symbol
+            );
+
+            return {
+              symbol,
+              category: g.c,
+              done: personalProfile
+                ? Number(progress[key] || 0)
+                : 0
+            };
+          })
+          .filter(item =>
+            !personalProfile ||
+            item.done < targetReps
+          )
       );
     }
 
@@ -375,15 +458,26 @@
 
   function task() {
     if (session.i >= session.q.length) {
+      if (personalProfile) {
+        return null;
+      }
+
       session.round++;
       session.q = queue();
       session.i = 0;
     }
 
-    return session.q[session.i];
+    return session.q[session.i] || null;
   }
 
   function start() {
+    const initialQueue = queue();
+
+    if (personalProfile && !initialQueue.length) {
+      alert(allDoneMessage());
+      return;
+    }
+
     session = {
       submissionId: id(),
       participantCode: personalProfile
@@ -391,8 +485,10 @@
         : code(),
       startedAt: new Date().toISOString(),
       reps: +ui.reps.value,
-      r: 0,
-      q: queue(),
+      r: personalProfile
+        ? Number(initialQueue[0]?.done || 0)
+        : 0,
+      q: initialQueue,
       i: 0,
       round: 1,
       samples: [],
@@ -522,6 +618,11 @@
 
     const z = task();
 
+    if (!z) {
+      review();
+      return;
+    }
+
     session.samples.push({
       id: id(),
       label: z.symbol,
@@ -545,17 +646,36 @@
     session.r++;
 
     if (session.r >= session.reps) {
-      session.r = 0;
       session.i++;
+
+      session.r =
+        personalProfile &&
+        session.i < session.q.length
+          ? Number(session.q[session.i].done || 0)
+          : 0;
     }
 
     strokes = [];
     redraw();
+
+    if (
+      personalProfile &&
+      session.i >= session.q.length
+    ) {
+      review();
+      return;
+    }
+
     render();
   }
 
   function skip() {
     const z = task();
+
+    if (!z) {
+      review();
+      return;
+    }
 
     session.skipped.push({
       symbol: z.symbol,
@@ -563,11 +683,25 @@
       at: new Date().toISOString()
     });
 
-    session.r = 0;
     session.i++;
+
+    session.r =
+      personalProfile &&
+      session.i < session.q.length
+        ? Number(session.q[session.i].done || 0)
+        : 0;
 
     strokes = [];
     redraw();
+
+    if (
+      personalProfile &&
+      session.i >= session.q.length
+    ) {
+      review();
+      return;
+    }
+
     render();
   }
 
@@ -583,6 +717,14 @@
 
     ui.summary.textContent =
       T().ready(session.samples.length);
+
+    ui.cont.classList.toggle(
+      "hidden",
+      Boolean(
+        personalProfile &&
+        session.i >= session.q.length
+      )
+    );
   }
 
   function cont() {
@@ -792,6 +934,12 @@
         }
       }
 
+      if (personalProfile) {
+        commitSubmittedSamples(
+          session.samples
+        );
+      }
+
       show(ui.thanks);
 
       ui.receipt.textContent =
@@ -817,6 +965,8 @@
     if (!session) return;
 
     const z = task();
+
+    if (!z) return;
 
     ui.code.textContent =
       session.participantCode;
