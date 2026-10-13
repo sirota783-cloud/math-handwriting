@@ -1,0 +1,23 @@
+name: Supabase daily health check
+
+on:
+  schedule:
+    - cron: '17 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-supabase:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check Supabase Auth health endpoint
+        env:
+          SUPABASE_URL: https://bthkzkdsijnhuvnewzuj.supabase.co
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --max-time 25 --retry 2 \
+            "${SUPABASE_URL}/auth/v1/health" >/dev/null
+          echo "Supabase responded successfully."
