@@ -1,0 +1,57 @@
+name: Encrypted Supabase database backup
+
+on:
+  schedule:
+    - cron: '37 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_ENCRYPTION_PASSWORD: ${{ secrets.BACKUP_ENCRYPTION_PASSWORD }}
+    steps:
+      - name: Check required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_DB_URL" || { echo "Missing SUPABASE_DB_URL"; exit 1; }
+          test -n "$BACKUP_ENCRYPTION_PASSWORD" || { echo "Missing BACKUP_ENCRYPTION_PASSWORD"; exit 1; }
+      - name: Export and validate PostgreSQL database
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p backup
+          chmod 700 backup
+          docker run --rm \
+            -e SUPABASE_DB_URL \
+            -v "$PWD/backup:/backup" \
+            postgres:17-alpine sh -ec '
+              pg_dump --dbname="$SUPABASE_DB_URL" --format=custom --no-owner --no-acl --file=/backup/database.dump
+              pg_restore --list /backup/database.dump >/dev/null
+            '
+          test -s backup/database.dump
+      - name: Encrypt database backup
+        shell: bash
+        run: |
+          set -euo pipefail
+          gpg --batch --yes --pinentry-mode loopback \
+            --symmetric --cipher-algo AES256 --s2k-digest-algo SHA256 \
+            --s2k-mode 3 --s2k-count 65011712 \
+            --passphrase-fd 3 \
+            --output backup/database.dump.gpg backup/database.dump \
+            3<<<"$BACKUP_ENCRYPTION_PASSWORD"
+          test -s backup/database.dump.gpg
+          shred -u backup/database.dump || rm -f backup/database.dump
+      - name: Save encrypted backup for 30 days
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-db-encrypted-${{ github.run_id }}
+          path: backup/database.dump.gpg
+          retention-days: 30
+          if-no-files-found: error
