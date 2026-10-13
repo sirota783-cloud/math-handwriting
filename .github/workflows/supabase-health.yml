@@ -16,8 +16,10 @@ jobs:
       - name: Check Supabase Auth health endpoint
         env:
           SUPABASE_URL: https://bthkzkdsijnhuvnewzuj.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_gsoH21Rei_f5rQyrjXyXPQ_8oI8LKR0
         run: |
           set -euo pipefail
           curl --fail --silent --show-error --location --max-time 25 --retry 2 \
+            --header "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
             "${SUPABASE_URL}/auth/v1/health" >/dev/null
           echo "Supabase responded successfully."
