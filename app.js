@@ -75,11 +75,26 @@
       ? personalProfile?.categorySets?.[selectedSet]
       : personalProfile?.categories;
 
-    return categories?.length
+    const filteredGroups = categories?.length
       ? groups.filter(group =>
           categories.includes(group.c)
         )
       : groups;
+
+    // Optional, page-specific symbol selection. The master symbol
+    // inventory stays unchanged for all other collection pages.
+    const allowed = window.HANDWRITING_ALLOWED_SYMBOLS;
+    if (!allowed) return filteredGroups;
+
+    return filteredGroups
+      .map(group => ({
+        ...group,
+        s: group.s.filter(symbol =>
+          Array.isArray(allowed[group.c]) &&
+          allowed[group.c].includes(symbol)
+        )
+      }))
+      .filter(group => group.s.length > 0);
   }
 
   const tr = {
