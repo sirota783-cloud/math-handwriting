@@ -18,4 +18,30 @@ window.HANDWRITING_ALLOWED_SYMBOLS = {
   geometry: ["∠","⊥","∥","△"],
   punctuation: ["(",")","[","]",","]
 };
-</script><script src="app.js?v=prep-20261107"></script></body></html>
+</script><script src="app.js?v=prep-20261107"></script><script>
+(() => {
+  const pageText = {
+    ru: {
+      title: "Подготовительный курс — математические символы",
+      intro: "Пишите основные математические символы подготовительного курса."
+    },
+    he: {
+      title: "מכינה קדם־אקדמית — סמלים מתמטיים",
+      intro: "כתבו את הסמלים המתמטיים העיקריים של המכינה."
+    },
+    en: {
+      title: "Preparatory course — Mathematical symbols",
+      intro: "Write the main mathematical symbols used in the preparatory course."
+    }
+  };
+  function updatePageLanguage() {
+    const locale = document.getElementById("lang").value;
+    const words = pageText[locale] || pageText.ru;
+    document.querySelector("header h1").textContent = words.title;
+    document.getElementById("wText").textContent = words.intro;
+    document.title = words.title;
+  }
+  document.getElementById("lang").addEventListener("change", updatePageLanguage);
+  updatePageLanguage();
+})();
+</script></body></html>
