@@ -244,6 +244,7 @@
   };
 
   let lang =
+    window.HANDWRITING_DEFAULT_LANG ||
     localStorage.getItem("hwlang") ||
     (
       navigator.language.startsWith("he")
